@@ -11,6 +11,7 @@ let initialDirection = null; // Track initial direction
 let highlightQueue = [];
 let highlightTimer;
 let selectionGuide;
+let touchPlayEnabled = false; // Track touch play state
 
 async function fetchWords() {
     const response = await fetch('words.json');
@@ -61,42 +62,49 @@ function renderPuzzle(puzzle) {
             cell.textContent = letter;
             cell.dataset.row = rowIndex;
             cell.dataset.col = colIndex;
+
+            // Add event listeners based on touch play state
             cell.addEventListener('mousedown', startSelection);
             cell.addEventListener('mouseover', continueSelection);
             cell.addEventListener('mouseup', endSelection);
-            cell.addEventListener('touchstart', startTouchSelection);
-            cell.addEventListener('touchmove', continueTouchSelection);
-            cell.addEventListener('touchend', endTouchSelection);
+
+            if (touchPlayEnabled) {
+                cell.addEventListener('touchstart', startTouchSelection);
+                cell.addEventListener('touchmove', continueTouchSelection);
+                cell.addEventListener('touchend', endTouchSelection);
+            } else {
+                cell.removeEventListener('touchstart', startTouchSelection);
+                cell.removeEventListener('touchmove', continueTouchSelection);
+                cell.removeEventListener('touchend', endTouchSelection);
+            }
+
             grid.appendChild(cell);
         });
     });
 }
 
-function renderWordList(words) {
-    const wordList = document.getElementById('wordList');
-    wordList.innerHTML = '';
-
-    words.forEach(word => {
-        const listItem = document.createElement('li');
-        listItem.textContent = word;
-        wordList.appendChild(listItem);
-    });
+// Toggle touch play state based on checkbox
+function toggleTouchPlay() {
+    touchPlayEnabled = document.getElementById('touchPlay').checked;
+    generatePuzzle(); // Re-generate puzzle to apply event listeners
 }
 
 // Touch event handlers
 function startTouchSelection(event) {
+    if (!touchPlayEnabled) return;
     event.preventDefault();
     isTouchActive = true;
     addCellToHighlightQueue(event.touches[0].clientX, event.touches[0].clientY);
 }
 
 function continueTouchSelection(event) {
-    if (!isTouchActive) return;
+    if (!isTouchActive || !touchPlayEnabled) return;
     event.preventDefault();
     addCellToHighlightQueue(event.touches[0].clientX, event.touches[0].clientY);
 }
 
 function endTouchSelection() {
+    if (!touchPlayEnabled) return;
     isTouchActive = false;
     processHighlightQueue();
     checkSelection();
