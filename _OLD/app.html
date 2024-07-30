@@ -63,6 +63,7 @@
             background-color: #f9f9f9;
             border-radius: 10px;
             box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+            touch-action: none; /* Prevent default touch actions */
         }
 
         .grid-cell {
@@ -282,6 +283,7 @@
 
         function continueTouchSelection(event) {
             if (!isTouchActive) return;
+            event.preventDefault(); // Prevent default touch behavior
             const touch = event.touches[0];
             const targetCell = document.elementFromPoint(touch.clientX, touch.clientY);
             if (targetCell && targetCell.classList.contains('grid-cell')) {

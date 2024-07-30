@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Word Search Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Word Search Game</h1>
+        <div class="settings">
+            <label for="numWords">Number of Words:</label>
+            <input type="number" id="numWords" min="5" max="20" value="10">
+            <label for="gridSize">Grid Size:</label>
+            <input type="number" id="gridSize" min="10" max="20" value="10">
+            <button onclick="generatePuzzle()">Generate Puzzle</button>
+        </div>
+        <div class="options">
+            <label>
+                <input type="checkbox" id="diagonalWords" checked> Diagonal Words
+            </label>
+            <label>
+                <input type="checkbox" id="verticalWords" checked> Vertical Words
+            </label>
+            <button onclick="highlightAllWords()">Highlight All Words</button>
+            <button onclick="giveHint()">Hint</button>
+        </div>
+        <div class="game">
+            <div class="grid" id="puzzleGrid"></div>
+            <div class="word-list">
+                <h2>Words to Find:</h2>
+                <ul id="wordList"></ul>
+            </div>
+        </div>
+        <div class="score">
+            <h2>Score: <span id="score">0</span></h2>
+        </div>
+        <div class="timer">
+            <h2>Time: <span id="timer">00:00</span></h2>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
