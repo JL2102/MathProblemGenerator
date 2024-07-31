@@ -8,16 +8,12 @@ let score = 0;
 let timerInterval;
 let secondsElapsed = 0;
 let initialDirection = null;
-let highlightTimer;
-let highlightQueue = [];
 
-// Fetch words from a JSON file
 async function fetchWords() {
     const response = await fetch('words.json');
     return await response.json();
 }
 
-// Generate puzzle grid
 async function generatePuzzle() {
     clearInterval(timerInterval);
     secondsElapsed = 0;
@@ -41,7 +37,6 @@ async function generatePuzzle() {
     renderWordList(selectedWords);
 }
 
-// Select words randomly from dictionary
 function selectWords(dictionary, count) {
     const selected = [];
     while (selected.length < count) {
@@ -51,7 +46,6 @@ function selectWords(dictionary, count) {
     return selected;
 }
 
-// Render the puzzle grid
 function renderPuzzle(puzzle) {
     const grid = document.getElementById('puzzleGrid');
     grid.innerHTML = '';
@@ -75,7 +69,6 @@ function renderPuzzle(puzzle) {
     });
 }
 
-// Render word list to find
 function renderWordList(words) {
     const wordList = document.getElementById('wordList');
     wordList.innerHTML = '';
@@ -87,47 +80,40 @@ function renderWordList(words) {
     });
 }
 
-// Start selection process for mouse
 function startSelection(event) {
     event.preventDefault();
     isMouseDown = true;
     handleSelection(event.clientX, event.clientY);
 }
 
-// Start selection process for touch
 function startTouchSelection(event) {
     event.preventDefault();
     isTouchActive = true;
     handleSelection(event.touches[0].clientX, event.touches[0].clientY);
 }
 
-// Continue selection for mouse
 function continueSelection(event) {
     if (isMouseDown) {
         handleSelection(event.clientX, event.clientY);
     }
 }
 
-// Continue selection for touch
 function continueTouchSelection(event) {
     if (isTouchActive) {
         handleSelection(event.touches[0].clientX, event.touches[0].clientY);
     }
 }
 
-// End selection process for mouse
 function endSelection() {
     isMouseDown = false;
     processSelection();
 }
 
-// End selection process for touch
 function endTouchSelection() {
     isTouchActive = false;
     processSelection();
 }
 
-// Handle cell selection
 function handleSelection(x, y) {
     const targetCell = document.elementFromPoint(x, y);
     if (targetCell && targetCell.classList.contains('grid-cell')) {
@@ -135,7 +121,6 @@ function handleSelection(x, y) {
     }
 }
 
-// Toggle cell highlight state
 function toggleCellHighlight(cell) {
     if (cell.classList.contains('highlight')) {
         cell.classList.remove('highlight');
@@ -146,7 +131,6 @@ function toggleCellHighlight(cell) {
     }
 }
 
-// Process the selection to check if it forms a valid word
 function processSelection() {
     if (selectedCells.length === 0) return;
 
@@ -184,7 +168,6 @@ function processSelection() {
     checkWinCondition();
 }
 
-// Draw line through found word
 function drawLineThroughWord(cells) {
     const grid = document.getElementById('puzzleGrid');
     const startX = cells[0].offsetLeft + cells[0].offsetWidth / 2;
@@ -202,7 +185,6 @@ function drawLineThroughWord(cells) {
     grid.appendChild(line);
 }
 
-// Check if all words are found to determine win condition
 function checkWinCondition() {
     const totalWords = document.querySelectorAll('.word-list li').length;
     if (foundWords.length === totalWords) {
@@ -211,7 +193,6 @@ function checkWinCondition() {
     }
 }
 
-// Start the game timer
 function startTimer() {
     timerInterval = setInterval(() => {
         secondsElapsed++;
@@ -219,14 +200,12 @@ function startTimer() {
     }, 1000);
 }
 
-// Format the time for display
 function formatTime(seconds) {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-// Get directions for placing words based on difficulty
 function getDirections() {
     const difficulty = document.getElementById('difficulty').value;
     let directions;
@@ -253,7 +232,6 @@ function getDirections() {
     return directions;
 }
 
-// Generator class for word search puzzle
 class Generator {
     get_puzzle_dim(words, size_fac) {
         let total = 0;
