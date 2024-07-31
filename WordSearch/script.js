@@ -1,10 +1,9 @@
 const ALL_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const CELL_SIZE = 50;
-const TOUCH_SENSITIVITY = 10; // Lower values increase sensitivity (more responsive)
 
 let selectedCells = [];
-let isMouseDown = false;
-let isTouchActive = false;
+let firstSelectedCell = null;
+let secondSelectedCell = null;
 let foundWords = [];
 let score = 0;
 let timerInterval;
@@ -26,6 +25,8 @@ async function generatePuzzle() {
     foundWords = [];
     document.getElementById('score').textContent = score;
     selectedCells = [];
+    firstSelectedCell = null;
+    secondSelectedCell = null;
     initialDirection = null;
 
     const wordsDictionary = await fetchWords();
@@ -60,12 +61,7 @@ function renderPuzzle(puzzle) {
             cell.textContent = letter;
             cell.dataset.row = rowIndex;
             cell.dataset.col = colIndex;
-            cell.addEventListener('mousedown', startSelection);
-            cell.addEventListener('mouseover', continueSelection);
-            cell.addEventListener('mouseup', endSelection);
-            cell.addEventListener('touchstart', startTouchSelection);
-            cell.addEventListener('touchmove', continueTouchSelection);
-            cell.addEventListener('touchend', endTouchSelection);
+            cell.addEventListener('click', handleCellClick);
             grid.appendChild(cell);
         });
     });
@@ -82,58 +78,53 @@ function renderWordList(words) {
     });
 }
 
-function startSelection(event) {
-    event.preventDefault();
-    isMouseDown = true;
-    handleSelection(event.clientX, event.clientY);
-}
-
-function startTouchSelection(event) {
-    event.preventDefault();
-    isTouchActive = true;
-    handleSelection(event.touches[0].clientX, event.touches[0].clientY);
-}
-
-function continueSelection(event) {
-    if (isMouseDown) {
-        handleSelection(event.clientX, event.clientY);
-    }
-}
-
-function continueTouchSelection(event) {
-    if (isTouchActive) {
-        handleSelection(event.touches[0].clientX, event.touches[0].clientY);
-    }
-}
-
-function endSelection() {
-    isMouseDown = false;
-    processSelection();
-}
-
-function endTouchSelection() {
-    isTouchActive = false;
-    processSelection();
-}
-
-function handleSelection(x, y) {
-    // Use the TOUCH_SENSITIVITY variable to control how often cells are selected
-    if (selectedCells.length === 0 || Math.abs(x - selectedCells[selectedCells.length - 1].offsetLeft) > TOUCH_SENSITIVITY || Math.abs(y - selectedCells[selectedCells.length - 1].offsetTop) > TOUCH_SENSITIVITY) {
-        const targetCell = document.elementFromPoint(x, y);
-        if (targetCell && targetCell.classList.contains('grid-cell')) {
-            toggleCellHighlight(targetCell);
-        }
-    }
-}
-
-function toggleCellHighlight(cell) {
-    if (cell.classList.contains('highlight')) {
-        cell.classList.remove('highlight');
-        selectedCells = selectedCells.filter(selectedCell => selectedCell !== cell);
-    } else {
+function handleCellClick(event) {
+    const cell = event.target;
+    if (!firstSelectedCell) {
+        firstSelectedCell = cell;
         cell.classList.add('highlight');
-        selectedCells.push(cell);
+    } else {
+        secondSelectedCell = cell;
+        highlightCellsBetween(firstSelectedCell, secondSelectedCell);
+        processSelection();
+        resetSelection();
     }
+}
+
+function highlightCellsBetween(startCell, endCell) {
+    const startRow = parseInt(startCell.dataset.row);
+    const startCol = parseInt(startCell.dataset.col);
+    const endRow = parseInt(endCell.dataset.row);
+    const endCol = parseInt(endCell.dataset.col);
+
+    // Determine the direction
+    const dRow = endRow - startRow;
+    const dCol = endCol - startCol;
+    const stepRow = dRow !== 0 ? dRow / Math.abs(dRow) : 0;
+    const stepCol = dCol !== 0 ? dCol / Math.abs(dCol) : 0;
+
+    let currentRow = startRow;
+    let currentCol = startCol;
+
+    while (currentRow !== endRow || currentCol !== endCol) {
+        const cell = document.querySelector(`[data-row="${currentRow}"][data-col="${currentCol}"]`);
+        if (cell) {
+            cell.classList.add('highlight');
+            selectedCells.push(cell);
+        }
+        currentRow += stepRow;
+        currentCol += stepCol;
+    }
+
+    // Include the last cell
+    endCell.classList.add('highlight');
+    selectedCells.push(endCell);
+}
+
+function resetSelection() {
+    firstSelectedCell = null;
+    secondSelectedCell = null;
+    selectedCells = [];
 }
 
 function processSelection() {
@@ -157,7 +148,7 @@ function processSelection() {
             let wordScore = item.textContent.length;
             if (item.textContent === reversedWord) {
                 wordScore *= 2;
-            } else if (initialDirection === 'diagonal') {
+            } else if (Math.abs(startRow - endRow) === Math.abs(startCol - endCol)) {
                 wordScore *= 3;
             }
             score += wordScore;
