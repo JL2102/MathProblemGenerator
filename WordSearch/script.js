@@ -153,6 +153,44 @@ function processHighlightQueue() {
     highlightTimer = null;
 }
 
+function processSelection() {
+    if (selectedCells.length === 0) return;
+
+    let selectedWord = selectedCells.map(cell => cell.textContent).join('');
+    let reversedWord = selectedCells.map(cell => cell.textContent).reverse().join('');
+    const wordListItems = document.querySelectorAll('.word-list li');
+    let wordFound = false;
+
+    wordListItems.forEach(item => {
+        if ((item.textContent === selectedWord || item.textContent === reversedWord) && !item.classList.contains('found')) {
+            item.classList.add('found');
+            selectedCells.forEach(cell => {
+                cell.classList.add('found');
+                cell.classList.remove('highlight');
+            });
+            wordFound = true;
+
+            // Update score based on word type
+            let wordScore = item.textContent.length;
+            if (item.textContent === reversedWord) {
+                wordScore *= 2; // Double score for reversed words
+            } else if (initialDirection === 'diagonal') {
+                wordScore *= 3; // Triple score for diagonal words
+            }
+            score += wordScore;
+            document.getElementById('score').textContent = score;
+        }
+    });
+
+    if (wordFound) {
+        drawLineThroughWord(selectedCells);
+    }
+
+    selectedCells = [];
+    checkWinCondition();
+}
+
+
 // Determine the direction of movement based on two cells
 function determineDirection(cell1, cell2) {
     const row1 = parseInt(cell1.dataset.row, 10);
@@ -266,7 +304,7 @@ function drawLineThroughWord(cells) {
 // Check if all words are found
 function checkWinCondition() {
     const totalWords = document.querySelectorAll('.word-list li').length;
-    if (foundWords.length === totalWords) {
+    if (document.querySelectorAll('.word-list li.found').length === totalWords) {
         clearInterval(timerInterval);
         alert(`Congratulations! You've found all the words! Your score is ${score}.`);
     }
