@@ -88,6 +88,7 @@ function renderWordList(words) {
     });
 }
 
+<<<<<<< Updated upstream
 function handleCellClick(event) {
     try {
         const cell = event.target;
@@ -99,6 +100,53 @@ function handleCellClick(event) {
             highlightCellsBetween(firstSelectedCell, secondSelectedCell);
             processSelection();
             resetSelection();
+=======
+// Touch event handlers
+function startTouchSelection(event) {
+    event.preventDefault();
+    isTouchActive = true;
+    addCellToHighlightQueue(event.touches[0].clientX, event.touches[0].clientY);
+}
+
+function continueTouchSelection(event) {
+    if (!isTouchActive) return;
+    event.preventDefault();
+    addCellToHighlightQueue(event.touches[0].clientX, event.touches[0].clientY);
+}
+
+function endTouchSelection() {
+    isTouchActive = false;
+    processHighlightQueue();
+    checkSelection();
+}
+
+// Mouse event handlers
+function startSelection(event) {
+    event.preventDefault();
+    isMouseDown = true;
+    addCellToHighlightQueue(event.clientX, event.clientY);
+}
+
+function continueSelection(event) {
+    if (isMouseDown) {
+        addCellToHighlightQueue(event.clientX, event.clientY);
+    }
+}
+
+function endSelection() {
+    isMouseDown = false;
+    processHighlightQueue();
+    checkSelection();
+    initialDirection = null; // Reset the direction
+}
+
+// Optimize highlighting by using a queue and debouncing
+function addCellToHighlightQueue(x, y) {
+    const targetCell = document.elementFromPoint(x, y);
+    if (targetCell && targetCell.classList.contains('grid-cell')) {
+        if (!initialDirection && selectedCells.length > 0) {
+            initialDirection = determineDirection(selectedCells[0], targetCell);
+>>>>>>> Stashed changes
         }
     } catch (error) {
         console.error("Error handling cell click: ", error);
