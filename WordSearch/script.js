@@ -11,7 +11,6 @@ let initialDirection = null; // Track initial direction
 let highlightQueue = [];
 let highlightTimer;
 let selectionGuide;
-let touchPlayEnabled = false; // Track touch play state
 
 async function fetchWords() {
     const response = await fetch('words.json');
@@ -62,49 +61,42 @@ function renderPuzzle(puzzle) {
             cell.textContent = letter;
             cell.dataset.row = rowIndex;
             cell.dataset.col = colIndex;
-
-            // Add event listeners based on touch play state
             cell.addEventListener('mousedown', startSelection);
             cell.addEventListener('mouseover', continueSelection);
             cell.addEventListener('mouseup', endSelection);
-
-            if (touchPlayEnabled) {
-                cell.addEventListener('touchstart', startTouchSelection);
-                cell.addEventListener('touchmove', continueTouchSelection);
-                cell.addEventListener('touchend', endTouchSelection);
-            } else {
-                cell.removeEventListener('touchstart', startTouchSelection);
-                cell.removeEventListener('touchmove', continueTouchSelection);
-                cell.removeEventListener('touchend', endTouchSelection);
-            }
-
+            cell.addEventListener('touchstart', startTouchSelection);
+            cell.addEventListener('touchmove', continueTouchSelection);
+            cell.addEventListener('touchend', endTouchSelection);
             grid.appendChild(cell);
         });
     });
 }
 
-// Toggle touch play state based on checkbox
-function toggleTouchPlay() {
-    touchPlayEnabled = document.getElementById('touchPlay').checked;
-    generatePuzzle(); // Re-generate puzzle to apply event listeners
+function renderWordList(words) {
+    const wordList = document.getElementById('wordList');
+    wordList.innerHTML = '';
+
+    words.forEach(word => {
+        const listItem = document.createElement('li');
+        listItem.textContent = word;
+        wordList.appendChild(listItem);
+    });
 }
 
 // Touch event handlers
 function startTouchSelection(event) {
-    if (!touchPlayEnabled) return;
     event.preventDefault();
     isTouchActive = true;
     addCellToHighlightQueue(event.touches[0].clientX, event.touches[0].clientY);
 }
 
 function continueTouchSelection(event) {
-    if (!isTouchActive || !touchPlayEnabled) return;
+    if (!isTouchActive) return;
     event.preventDefault();
     addCellToHighlightQueue(event.touches[0].clientX, event.touches[0].clientY);
 }
 
 function endTouchSelection() {
-    if (!touchPlayEnabled) return;
     isTouchActive = false;
     processHighlightQueue();
     checkSelection();
@@ -138,7 +130,7 @@ function addCellToHighlightQueue(x, y) {
             initialDirection = determineDirection(selectedCells[0], targetCell);
         }
 
-        if (isCellInDirection(targetCell, initialDirection)) {
+        if (isCellInDirection(targetCell, initialDirection) || selectedCells.length === 0) {
             toggleCellHighlight(targetCell);
         }
     }
@@ -287,15 +279,71 @@ function formatTime(seconds) {
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-// Give a hint by highlighting the first letter of a word
+// Give a hint by highlighting the first letter of a word and deduct score
 function giveHint() {
     const wordListItems = document.querySelectorAll('.word-list li');
+    const gridCells = document.querySelectorAll('.grid-cell');
+    let hintGiven = false;
+
+    // Iterate through words to find an unfound one
     for (let item of wordListItems) {
         if (!item.classList.contains('found')) {
-            highlightFirstLetter(item.textContent);
-            break;
+            const word = item.textContent;
+            // Try to find this word in the grid
+            hintGiven = findAndHighlightWord(word, gridCells);
+
+            if (hintGiven) {
+                // Deduct 5 points for using a hint
+                score = Math.max(score - 5, 0); // Ensure score doesn't go below zero
+                document.getElementById('score').textContent = score;
+                break;
+            }
         }
     }
+}
+
+// Check all possible placements of a word on the grid
+function findAndHighlightWord(word, gridCells) {
+    for (let cell of gridCells) {
+        const row = parseInt(cell.dataset.row, 10);
+        const col = parseInt(cell.dataset.col, 10);
+
+        // Check in all possible directions
+        const directions = getDirections(); // Function that returns all possible directions
+        for (let [dx, dy] of directions) {
+            if (canPlaceWord(word, row, col, dx, dy, gridCells)) {
+                highlightCell(cell);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// Check if the word can be placed starting from (row, col) in direction (dx, dy)
+function canPlaceWord(word, row, col, dx, dy, gridCells) {
+    for (let i = 0; i < word.length; i++) {
+        const newRow = row + i * dy;
+        const newCol = col + i * dx;
+        const newCell = getCell(newRow, newCol, gridCells);
+        if (!newCell || newCell.textContent !== word[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Get the cell at specific grid coordinates
+function getCell(row, col, gridCells) {
+    return Array.from(gridCells).find(cell => 
+        parseInt(cell.dataset.row) === row && parseInt(cell.dataset.col) === col
+    );
+}
+
+// Highlight a specific cell
+function highlightCell(cell) {
+    cell.classList.add('highlight');
+    setTimeout(() => cell.classList.remove('highlight'), 2000);
 }
 
 // Highlight the first letter of a word in the grid
@@ -329,12 +377,41 @@ function highlightAllWords() {
 
 // Get directions for placing words in the grid, with a higher probability for diagonal directions
 function getDirections() {
-    const directions = [
-        [1, 0], [0, 1], // Horizontal and vertical
-        [1, 1], [-1, 1], [1, -1], [-1, -1], // Diagonals
-        [1, 1], [-1, 1], [1, -1], [-1, -1], // Extra diagonals to increase probability
-        [0, -1] // Vertical (upwards)
-    ];
+    const difficulty = document.getElementById('difficulty').value;
+    let directions;
+
+    switch (difficulty) {
+        case 'easy':
+            directions = [
+                [1, 0], [0, 1] // Horizontal and vertical
+            ];
+            break;
+        case 'medium':
+            directions = [
+                [1, 0], [0, 1], // Horizontal and vertical
+                [-1, 0], [0, -1] // Backwards and upside-down
+            ];
+            break;
+        case 'hard':
+            directions = [
+                [1, 0], [0, 1], [-1, 0], [0, -1], // Easy and Medium directions
+                [1, 1], [-1, 1], [1, -1], [-1, -1] // Diagonals
+            ];
+            break;
+        case 'impossible':
+            directions = [
+                [1, 0], [0, 1], [-1, 0], [0, -1], // Horizontal, vertical, and backward
+                [1, 1], [-1, 1], [1, -1], [-1, -1], // Diagonals
+                [1, 1], [1, -1], [-1, 1], [-1, -1] // Extra diagonals
+            ];
+            break;
+        default:
+            directions = [
+                [1, 0], [0, 1] // Fallback to Easy
+            ];
+            break;
+    }
+
     return directions;
 }
 

@@ -9,17 +9,21 @@
 <body>
     <div class="container">
         <h1>Word Search Game</h1>
-        <div class="settings">
-            <label for="numWords">Number of Words:</label>
-            <input type="number" id="numWords" min="5" max="20" value="10">
-            <label for="gridSize">Grid Size:</label>
-            <input type="number" id="gridSize" min="10" max="20" value="10">
-            <button onclick="generatePuzzle()">Generate Puzzle</button>
-            <label>
-                <input type="checkbox" id="touchPlay" onclick="toggleTouchPlay()"> Enable Tablet Touch Play
-            </label>
-        </div>
-        
+<div class="settings">
+    <label for="numWords">Number of Words:</label>
+    <input type="number" id="numWords" min="5" max="20" value="10">
+    <label for="gridSize">Grid Size:</label>
+    <input type="number" id="gridSize" min="10" max="20" value="10">
+    <button onclick="generatePuzzle()">Generate Puzzle</button>
+    <label for="difficulty">Difficulty:</label>
+    <select id="difficulty">
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+        <option value="impossible">Impossible</option>
+    </select>
+</div>
+
         <div class="options">
             <label>
                 <input type="checkbox" id="diagonalWords" checked> Diagonal Words
