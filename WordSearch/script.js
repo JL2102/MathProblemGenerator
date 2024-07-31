@@ -118,9 +118,9 @@ function highlightCellsBetween(startCell, endCell) {
 }
 
 function resetSelection() {
-    selectedCells = [];
     firstSelectedCell = null;
     secondSelectedCell = null;
+    selectedCells = [];
 }
 
 function processSelection() {
@@ -144,17 +144,15 @@ function processSelection() {
             let wordScore = item.textContent.length;
             if (item.textContent === reversedWord) {
                 wordScore *= 2;
-            } else if (Math.abs(endCell.dataset.row - startCell.dataset.row) === Math.abs(endCell.dataset.col - startCell.dataset.col)) {
+            } else if (Math.abs(parseInt(endCell.dataset.row) - parseInt(startCell.dataset.row)) === Math.abs(parseInt(endCell.dataset.col) - parseInt(startCell.dataset.col))) {
                 wordScore *= 3;
             }
             score += wordScore;
             document.getElementById('score').textContent = score;
+
+            drawLineThroughWord(selectedCells);
         }
     });
-
-    if (wordFound) {
-        drawLineThroughWord(selectedCells);
-    }
 
     checkWinCondition();
 }
