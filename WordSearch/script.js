@@ -83,43 +83,52 @@ function renderWordList(words) {
     });
 }
 
+function handleSelection(x, y) {
+    if (highlightTimer) {
+        clearTimeout(highlightTimer);
+    }
+    highlightTimer = setTimeout(() => {
+        const targetCell = document.elementFromPoint(x, y);
+        if (targetCell && targetCell.classList.contains('grid-cell')) {
+            toggleCellHighlight(targetCell);
+        }
+    }, 10); // Debounce time can be adjusted as needed
+}
+
 // Touch event handlers
 function startTouchSelection(event) {
     event.preventDefault();
     isTouchActive = true;
-    addCellToHighlightQueue(event.touches[0].clientX, event.touches[0].clientY);
+    handleSelection(event.touches[0].clientX, event.touches[0].clientY);
 }
 
 function continueTouchSelection(event) {
-    if (!isTouchActive) return;
-    event.preventDefault();
-    addCellToHighlightQueue(event.touches[0].clientX, event.touches[0].clientY);
+    if (isTouchActive) {
+        handleSelection(event.touches[0].clientX, event.touches[0].clientY);
+    }
 }
 
 function endTouchSelection() {
     isTouchActive = false;
-    processHighlightQueue();
-    checkSelection();
+    processSelection();
 }
 
 // Mouse event handlers
 function startSelection(event) {
-    event.preventDefault(); // Prevent default behavior
+    event.preventDefault();
     isMouseDown = true;
-    addCellToHighlightQueue(event.clientX, event.clientY);
+    handleSelection(event.clientX, event.clientY);
 }
 
 function continueSelection(event) {
     if (isMouseDown) {
-        addCellToHighlightQueue(event.clientX, event.clientY);
+        handleSelection(event.clientX, event.clientY);
     }
 }
 
 function endSelection() {
     isMouseDown = false;
-    processHighlightQueue();
-    checkSelection();
-    initialDirection = null; // Reset the direction
+    processSelection();
 }
 
 // Optimize highlighting by using a queue and debouncing
@@ -193,7 +202,6 @@ function toggleCellHighlight(cell) {
         selectedCells.push(cell);
     }
 }
-
 // Check if selected cells form a correct word
 function checkSelection() {
     if (selectedCells.length === 0) return;
