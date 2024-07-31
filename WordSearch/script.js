@@ -8,7 +8,6 @@ let foundWords = [];
 let score = 0;
 let timerInterval;
 let secondsElapsed = 0;
-let initialDirection = null;
 
 async function fetchWords() {
     const response = await fetch('words.json');
@@ -27,7 +26,6 @@ async function generatePuzzle() {
     selectedCells = [];
     firstSelectedCell = null;
     secondSelectedCell = null;
-    initialDirection = null;
 
     const wordsDictionary = await fetchWords();
     const numWords = parseInt(document.getElementById('numWords').value);
@@ -97,7 +95,6 @@ function highlightCellsBetween(startCell, endCell) {
     const endRow = parseInt(endCell.dataset.row);
     const endCol = parseInt(endCell.dataset.col);
 
-    // Determine the direction
     const dRow = endRow - startRow;
     const dCol = endCol - startCol;
     const stepRow = dRow !== 0 ? dRow / Math.abs(dRow) : 0;
@@ -116,15 +113,14 @@ function highlightCellsBetween(startCell, endCell) {
         currentCol += stepCol;
     }
 
-    // Include the last cell
     endCell.classList.add('highlight');
     selectedCells.push(endCell);
 }
 
 function resetSelection() {
+    selectedCells = [];
     firstSelectedCell = null;
     secondSelectedCell = null;
-    selectedCells = [];
 }
 
 function processSelection() {
@@ -148,7 +144,7 @@ function processSelection() {
             let wordScore = item.textContent.length;
             if (item.textContent === reversedWord) {
                 wordScore *= 2;
-            } else if (Math.abs(startRow - endRow) === Math.abs(startCol - endCol)) {
+            } else if (Math.abs(endCell.dataset.row - startCell.dataset.row) === Math.abs(endCell.dataset.col - startCell.dataset.col)) {
                 wordScore *= 3;
             }
             score += wordScore;
@@ -160,7 +156,6 @@ function processSelection() {
         drawLineThroughWord(selectedCells);
     }
 
-    selectedCells = [];
     checkWinCondition();
 }
 
