@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['main.py'],
+    ['DotsBoxes\\main.py'],
     pathex=[],
     binaries=[],
     datas=[('images/*', 'images')],
