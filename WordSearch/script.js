@@ -1,5 +1,7 @@
 const ALL_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const CELL_SIZE = 50;
+const TOUCH_SENSITIVITY = 10; // Lower values increase sensitivity (more responsive)
+
 let selectedCells = [];
 let isMouseDown = false;
 let isTouchActive = false;
@@ -115,9 +117,12 @@ function endTouchSelection() {
 }
 
 function handleSelection(x, y) {
-    const targetCell = document.elementFromPoint(x, y);
-    if (targetCell && targetCell.classList.contains('grid-cell')) {
-        toggleCellHighlight(targetCell);
+    // Use the TOUCH_SENSITIVITY variable to control how often cells are selected
+    if (selectedCells.length === 0 || Math.abs(x - selectedCells[selectedCells.length - 1].offsetLeft) > TOUCH_SENSITIVITY || Math.abs(y - selectedCells[selectedCells.length - 1].offsetTop) > TOUCH_SENSITIVITY) {
+        const targetCell = document.elementFromPoint(x, y);
+        if (targetCell && targetCell.classList.contains('grid-cell')) {
+            toggleCellHighlight(targetCell);
+        }
     }
 }
 
